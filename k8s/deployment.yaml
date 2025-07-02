@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-team-retro
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: smart-team-retro
+  template:
+    metadata:
+      labels:
+        app: smart-team-retro
+    spec:
+      containers:
+      - name: backend
+        image: your-dockerhub/smart-team-retro-backend:latest
+        ports:
+        - containerPort: 4000
+        env:
+        - name: DATABASE_URL
+          value: "postgres://postgres:postgres@db:5432/postgres"
+        - name: REDIS_URL
+          value: "redis://redis:6379"
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secret
+              key: api-key
+      - name: frontend
+        image: your-dockerhub/smart-team-retro-frontend:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-team-retro-backend
+spec:
+  selector:
+    app: smart-team-retro
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-team-retro-frontend
+spec:
+  selector:
+    app: smart-team-retro
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000

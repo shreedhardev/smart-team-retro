@@ -1,0 +1,34 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --prefix backend
+      - run: npm test --prefix backend
+      - run: npm ci --prefix frontend
+      - run: npm test --prefix frontend
+
+      - name: Build Backend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          tags: ghcr.io/${{ github.repository }}/backend:latest
+          push: false
+
+      - name: Build Frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          tags: ghcr.io/${{ github.repository }}/frontend:latest
+          push: false
